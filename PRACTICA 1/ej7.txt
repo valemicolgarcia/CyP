@@ -1,0 +1,44 @@
+
+EJERCICIO 7 - PRACTICA 1
+
+Desarrolle una solución de grano fino usando sólo variables compartidas (no se puede usar
+las sentencias await ni funciones especiales como TS o FA). En base a lo visto en la clase 2 de teoría, resuelva el problema de acceso a sección crítica usando un proceso coordinador.
+En este caso, cuando un proceso SC[i] quiere entrar a su sección crítica le avisa al coordinador, y espera a que éste le dé permiso. Al terminar de ejecutar su sección crítica, el proceso SC[i] le avisa al coordinador. 
+
+Nota: puede basarse en la solución para implementar barreras con Flags y Coordinador vista en la teoría 2.
+
+ANALISIS:
+- solucion de grano fino: solo variables compartidas (no AWAIT ni TS o FA)
+- CLASE 2 de teoria
+- proceso coordinador
+
+- cuando un proceso SC[i] quiere entrar a su seccion critica le avisa al coordinador y espera a que le de permiso
+- al terminar SC[i] le avisa al coordinador
+
+
+SOLUCION: 
+
+int arribo[1:n] = ([n] 0); //array de tamanio n (uno por cada worker que indica si un proceso llego a la barrera). inicialmente todos estan en 0
+
+int continuar[1:n] = ([n] 0); //array que permite desbloquear a los workers despues de que todos han llegado a la barrera. inicia en 0
+
+process Worker [i:1 to n]{
+    while (true) {
+
+        arribo[i] = 1; //cd proceso ejecuta su tarea y marca su llegada con 1
+        while (continuar[i] == 0) skip; //no puede continuar hasta que el coordinador lo desbloquee
+        continuar[i] = 0; //una vez terminada su tarea se bloquea
+
+    }
+}
+
+process Coordinador{
+    while (true){
+        for [i = 1 to n]{
+            while (arribo[i] = 0) skip; //espera a que worker i llegue (arribo[i] = 1)
+            arribo[i] = 0; //reinicia la variable para la siguiente iteracion
+        }
+        for [i:1 to n] continuar[i] = 1; //una vez que todos los workers llegaron se los desbloquea
+    }
+}
+

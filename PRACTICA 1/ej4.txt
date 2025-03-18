@@ -1,0 +1,131 @@
+EJERCICIO 4 - PRACTICA 1
+
+--DUDA: revisar el coordinador en el E
+--RTA:
+
+4. En cada ítem debe realizar una solución concurrente de grano grueso (utilizando <> y/o
+<await B; S>) para el siguiente problema, teniendo en cuenta las condiciones indicadas en el item. 
+
+Existen N personas que deben imprimir un trabajo cada una.
+
+INCISO A---------------------------------
+a) Implemente una solución suponiendo que existe una única impresora compartida por todas las personas, y las mismas la deben usar de a una persona a la vez, sin importar el orden. Existe una función Imprimir(documento) llamada por la persona que simula el uso de la impresora. Sólo se deben usar los procesos que representan a las Personas.
+
+ANALISIS: 
+- 1 impresora
+- N personas
+- la impresora se usa de a 1 persona a la vez, sin orden
+- Imprimir(documento) : funcion que simula el uso de la impresora
+- condicion: solo usar procesos de las personas
+
+SOLUCION:
+
+bool Libre = True;
+Process Persona [id: 0..N-1]{
+    <await (Libre); Libre = false> ;
+    Imprimir(documento);
+    Libre =  true;
+}
+
+
+INCISO B---------------------------------
+b) Modifique la solución de (a) para el caso en que se deba respetar el orden de llegada.
+
+ANALISIS:
+- Si una persona llega a la impresora y esta ocupada, debe demorarse hasta que sea su turno.
+- Cuando sea su turno debe usar la impresora y al terminar avisarle al siguiente que la use(en caso de que alguien la este esperando)
+- Primero hay que verificar si la impresora esta libre y autoasignarse el turno
+
+SOLUCION:
+
+colaEspecial C; //variable compartida
+int Siguiente = -1;
+
+Process Persona [id: 0..N-1]{
+    <if (Siguiente = -1) Siguiente = id else Agregar (C, id) > ;
+    <await (Siguiente == id)>;
+    Imprimir(documento);
+    <if (empty(C)) Siguiente = -1 else Siguiente = Sacar(C)>;
+
+}
+
+
+
+INCISO C---------------------------------
+c) Modifique la solución de (b) para el caso en que se deba respetar el orden de llegada pero dando prioridad de acuerdo a la edad de cada persona (cuando la impresora está libre la debe usar la persona de mayor edad entre las que hayan solicitado su uso).
+
+ANALISIS:
+Uso la logica del ejemplo 4 de la exp PRACTICA
+Supongo estructura colaEspecial con funcion Agregar(edad, id) que dependiendo de este valor lo inserta al prinicpio o al final de la cola. Existe funcion sacar que devuelve el id de quien esta al principio de la cola
+
+SOLUCION:
+
+colaEspecial C; //variable compartida
+int Siguiente = -1;
+
+Process Persona [id: 0..N-1]{
+    <if (Siguiente = -1) Siguiente = id else Agregar (C, edad, id) > ;
+    <await (Siguiente == id)>;
+    Imprimir(documento);
+    <if (empty(C)) Siguiente = -1 else Siguiente = Sacar(C)>;
+
+}
+
+
+INCISO D ---------------------------------
+d) Modifique la solución de (a) para el caso en que se deba respetar estrictamente el orden
+dado por el identificador del proceso (la persona X no puede usar la impresora hasta que
+no haya terminado de usarla la persona X-1).
+
+ANALISIS:
+- no es el orden de llegada, es el orden del id
+- uso la logica del ejemplo 3 de la explicacion PRACTICA, pero teniendo en cuenta que no hay Coordinador
+
+
+
+SOLUCION:
+
+
+int Actual = -1;
+
+Process Persona [id: 0..N-1]{
+    <await (Actual == id)> ;
+    Imprimir(documento);
+    Actual = Actual + 1;
+
+}
+
+
+INCISO E---------------------------------
+e) Modifique la solución de (c) para el caso en que además hay un proceso Coordinador que
+le indica a cada persona cuando puede usar la impresora.
+
+ANALISIS: 
+- le saque la cola
+- el corrdinador recorre un for dandole el lugar a cada uno segun su id
+
+SOLUCION:
+
+
+colaEspecial C; //variable compartida
+int Siguiente = -1;
+
+Process Persona [id: 0..N-1]{
+    
+    <await (Siguiente == id)>;
+    Ok = true;
+    Imprimir(documento);
+
+}
+
+
+
+Process Coordinador {
+
+for i = 0 ..N{
+    Siguiente = i;
+    Imprimir (documento);
+    <await (Ok)>; Ok = false;
+}
+
+}

@@ -1,0 +1,19 @@
+EJERCICIO 2 - PRACTICA 1
+
+--DUDA: chequear que este bien
+--RTA: 
+
+
+Realice una solución concurrente de grano grueso (utilizando <> y/o <await B; S>) para el
+siguiente problema. Dado un numero N verifique cuantas veces aparece ese número en un
+arreglo de longitud M. Escriba las condiciones que considere necesarias. 
+
+int N = N;
+Array array;
+int Total = 0;
+
+Process Contar [i:0 ..M-1]{
+    if (array[i] == N)
+        <Total = Total + 1>
+}
+

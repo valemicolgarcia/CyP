@@ -1,0 +1,55 @@
+
+EJERCICIO 5 - PRACTICA 1
+
+--DUDA: no se si esta bien el corrige examen, con el tema de cual es el examen y cual el id del alumno
+--RTA:
+
+5. Resolver con SENTENCIAS AWAIT (<> y/o <await B; S>) el siguiente problema. En un
+examen final hay P alumnos y 3 profesores. Cuando todos los alumnos han llegado comienza
+el examen. Cada alumno resuelve su examen, lo entrega y espera a que alguno de los
+profesores lo corrija y le indique la nota. Los profesores corrigen los exámenes respectando
+el orden en que los alumnos van entregando. 
+
+ANALISIS:
+- contexto: examen final
+- P alumnos y 3 profesores
+- COMIENZA EL EXAMEN: cuando todos los alumnos llegaron
+- ALUMNO: 0.llega 1.espera inicio de examen, 2.resuelve examen, 3.entrega examen , 4.espera correccion y nota
+- PROFESOR: recibe examen, corrige examen, entrega nota (corrige en orden de entrega)
+
+SOLUCION:
+
+int llegaron = 0; //variable global que se va a ir incrementando a medida que van llegando 
+colaEspecial = C;
+
+Process Alumno [id: 0..P-1]{
+
+    //llega
+    < llegaron = llegaron + 1> //incremento en <> porque puede haber dos personas al = tiempo
+    //espera inicio de examen
+    < await (llegaron == N) >
+    //resuelve examen
+    //entrega examen
+    <Agregar (C, id);>
+    <Await (notas[id] != -1)>;
+
+}
+
+int corregidos = 0; //variable compartida por todos los profesores
+
+Process Profesores [id: 0 .. 2]{
+    int examenID;
+    while (corregidos < N){
+        <await (!empty(C) or (fin)) if (!fin) examenID = Sacar(C) >; //si la cola esta vacia o no se termino de corregir
+        if (!fin) {
+            int nota = CorrigeExamen(examen); 
+        }
+        notas[examenID] = nota;
+        <corregidos = corregidos + 1; if (corregidos == N) fin = true>;
+    }
+    //recibe examen
+
+    //corrige examen
+    //entrega nota
+
+}
