@@ -1,0 +1,40 @@
+EJERCICIO 2
+
+A una cerealera van T camiones a descargarse trigo y M camiones a descargar maíz. Sólo hay
+lugar para que 7 camiones a la vez descarguen pero no pueden ser más de 5 del mismo tipo
+de cereal. Nota: sólo se pueden usar procesos que representen a los camiones.
+
+ANALISIS
+
+- T camiones a descargar trigo
+- M camiones a descargar maiz
+
+- hay lugar para 7 camiones a la vez
+- no puede haber mas de 5 camiones del mismo tipo de cereal
+
+- solo usar proceso que represente a los camiones 
+
+SOLUCION
+
+sem totalCamiones = 7; // hay lugar para 7 camiones a la vez
+
+//no puede haber mas de 5 camiones a la vez del mismo tipo
+sem trigo = 5; 
+sem maiz = 5;
+
+Process camionTrigo [id: 1..T]{
+    P(totalCamiones);
+    P(trigo);
+    //descarga
+    V(trigo);
+    V(totalCamiones);
+    
+}
+
+Process camionMaiz [id: 1 ..M]{
+    P(totalCamiones);
+    P(maiz);
+    //descarga
+    V(trigo);
+    V(totalCamiones);
+}

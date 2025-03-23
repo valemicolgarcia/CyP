@@ -1,0 +1,39 @@
+EJERCICIO 1
+
+Un sistema operativo mantiene 5 instancias de un recurso almacenadas en una cola, cuando
+un proceso necesita usar una instancia del recurso la saca de la cola, la usa y cuando termina de usarla la vuelve a depositar. 
+
+ANALISIS ----
+
+- sistema operativo --> 5 instancias de un recurso en una COLA
+- USAR RECURSO: saca recurso de la cola
+- TERMINA: vuelve a depositar el recurso en la cola
+
+
+SOLUCION ----
+
+sem mutex = 1; //protege el acceso a la cola
+sem recursos = 5; //asegura de que no se usen ma de 5 recursos a la vez
+
+cola Cola = [r1, r2, r3, r4, r5]; //cola con 5 recursos
+
+Process Persona[id:0..N-1]{
+
+    recurso R;
+
+    P(recursos); //espera si no hay recursos disponibles
+
+    P(mutex);
+    pop(Cola, R); //saco un recurso de la cola
+    V(mutex);
+
+    //uso el recurso fuera de la SC
+
+    p(mutex)
+    pop(Cola, R);
+    V(mutex)
+
+    V(recursos); //libera el recurso para que otro lo use
+
+
+}

@@ -1,0 +1,228 @@
+EJERCICIO 4
+
+4. Existen N personas que deben fotocopiar un documento cada una. Resolver cada ítem
+usando semáforos:
+
+a) Implemente una solución suponiendo que existe una única fotocopiadora compartida
+por todas las personas, y las mismas la deben usar de a una persona a la vez, sin importar
+el orden. Existe una función Fotocopiar() llamada por la persona que simula el uso de la
+fotocopiadora. Sólo se deben usar los procesos que representan a las Personas.
+
+sem mutex = 1;
+
+Process Persona[id: 1..N]{
+    P(mutex)
+    fotocopiar();
+    V(mutex);
+}
+
+
+b) Modifique la solución de (a) para el caso en que se deba respetar el orden de llegada.
+
+ANALISIS
+- persona llega a fotocopiadora:
+- si esta libre la usa
+- si esta ocupada se encola y se duerme
+
+SOLUCION
+
+sem mutex = 1;
+bool libre = true;
+sem espera[N] = ([N]0);
+cola C;
+
+Process Persona [id: 0..N-1]{
+    int aux;
+
+    //intento acceder a la fotocopiadora
+    P(mutex);
+    
+    if(libre){
+        libre=false;
+
+        V(mutex); //la toma directamente, esto va aca porque v(mutex) no esta protegiendo la fotocopiadora en si, sino que esta protegiendo las variables compartidas
+
+    } else{
+        push(C, id); //se encola ya que no esta libre
+        V(mutex);
+        P(espera[id]); //se duerme hasta que lo llamen
+    }
+
+    fotocopiar();
+
+    P(mutex); //libero la fotocopiadora
+
+    if(empty (C)){
+        libre=true;
+        
+    }else{
+        pop(C,aux); //saco al siguiente
+        V(espera[aux]); //lo despierto
+    }
+
+    V(mutex);
+}
+
+
+
+c) Modifique la solución de (b) para el caso en que se deba dar prioridad de acuerdo a la
+edad de cada persona (cuando la fotocopiadora está libre la debe usar la persona de mayor
+edad entre las que estén esperando para usarla).
+
+//ANALISIS
+
+ahora, en vez de despertar al primero de la cola, se despierta al que mas edad tiene
+
+//SOLUCION
+
+Process Persona [id: 0..N-1]{
+    
+
+    //intento acceder a la fotocopiadora
+    P(mutex);
+    
+    if(libre){
+        libre=false;
+
+        V(mutex); //la toma directamente, esto va aca porque v(mutex) no esta protegiendo la fotocopiadora en si, sino que esta protegiendo las variables compartidas
+
+    } else{
+        push(C, id); //se encola ya que no esta libre
+        V(mutex);
+        P(espera[id]); //se duerme hasta que lo llamen
+    }
+
+    fotocopiar();
+
+    P(mutex); //libero la fotocopiadora
+
+    if(empty (C)){
+        libre=true;
+        
+    }else{
+        int mayor = buscarMayorEdad(C);
+        pop(C,mayor); //saco al siguiente
+        V(espera[mayor]); //lo despierto
+    }
+
+    V(mutex);
+}
+
+d) Modifique la solución de (a) para el caso en que se deba respetar estrictamente el orden
+dado por el identificador del proceso (la persona X no puede usar la fotocopiadora hasta
+que no haya terminado de usarla la persona X-1).
+
+//ANALISIS
+
+- Persona 1 usa la fotocopiadora
+- persona 2 , luego persona 3 , hasta persona n
+
+sem turno[N+1] = ([N+1]0); //ya que el ultimo proceso id = N se hace 
+turno[1]=1; //solo la persona 1 puede empezar
+
+Process Persona[id: 1..N] {
+    P(turno[id]);            // Espera su turno
+    Fotocopiar();            // Usa la fotocopiadora
+    V(turno[id+1]);          // Despierta al siguiente
+}
+
+//SOLUCION
+
+
+e) Modifique la solución de (b) para el caso en que además haya un Empleado que le indica
+a cada persona cuando debe usar la fotocopiadora.
+
+ANALISIS
+- se mantiene la cola de espera
+- hay un proceso empleado que esta constantemente revisando si la fotocopiadora esta libre
+- si esta libre y hay gente esperando elige al primero de la cola y lo despierta
+
+SOLUCION
+
+sem mutex = 1;
+bool libre = true;
+sem espera[N] = ([N] 0);
+cola C;
+
+Process Persona[id: 0..N-1] {
+    P(mutex);
+    if (libre) {
+        libre = false;
+        V(mutex);
+    } else {
+        push(C, id);
+        V(mutex);
+        P(espera[id]);  // espera que el Empleado lo habilite
+    }
+
+    Fotocopiar();
+
+    P(mutex);
+    libre = true;       // informa que liberó la fotocopiadora
+    V(mutex);
+    // no despierta al siguiente --> eso lo hace el Empleado
+}
+
+Process Empleado {
+    int aux;
+    while (true) {
+        P(mutex);
+        if (libre && !empty(C)) {
+            libre = false;
+            pop(C, aux);       // elige a la próxima persona
+            V(espera[aux]);    // la despierta
+        }
+        V(mutex);
+        // puede hacer un pequeño delay o yield si se quiere simular el tiempo
+    }
+}
+
+
+
+
+f) Modificar la solución (e) para el caso en que sean 10 fotocopiadoras. El empleado le indica a la persona cuando puede usar una fotocopiadora, y cual debe usar. 
+
+//ANALISIS
+- El empleado debe gestioonar 10 fotocopiadoras
+- se debe decir que numero de fotocopiadora usar
+
+
+//SOLUCION
+Process Persona[id: 0..N-1] {
+    P(mutex);
+    push(C, id);             // se encola
+    V(mutex);
+    P(espera[id]);           // espera a que el Empleado lo despierte
+
+    int cual = fotocopiadora[id];   // el empleado asignó la fotocopiadora
+
+    Fotocopiar(cual);        // usa esa fotocopiadora específica
+
+    P(mutex);
+    disponible[cual] = true; // libera esa fotocopiadora
+    V(mutex);
+}
+
+Process Empleado {
+    int id, i;
+
+    while (true) {
+        P(mutex);
+
+        if (!empty(C)) {
+            // Buscar una fotocopiadora libre
+            for (i = 0 to 9) {
+                if (disponible[i]) {
+                    disponible[i] = false;       // la reservo
+                    pop(C, id);                  // saco a la persona
+                    fotocopiadora[id] = i;       // le asigno la fotocopiadora
+                    V(espera[id]);               // la despierto
+                    break;                       // corto el for
+                }
+            }
+        }
+
+        V(mutex);
+        
+    }
+}
