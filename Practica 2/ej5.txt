@@ -1,0 +1,108 @@
+EJERCICIO 5
+
+5. Se debe simular una maratón con C corredores donde en la llegada hay UNA máquinas expendedoras de agua con capacidad para 20 botellas. Además existe un repositor encargado de reponer las botellas de la máquina. Cuando los C corredores han llegado al inicio comienza la carrera. Cuando un corredor termina la carrera se dirigen a la máquina expendedora, espera su turno (respetando el orden de llegada), saca una botella y se retira. Si encuentra la máquina sin botellas, le avisa al repositor para que cargue nuevamente la máquina con 20 botellas; espera a que se haga la recarga; saca una botella y se retira. Nota: maximizar la concurrencia; mientras se reponen las botellas se debe permitir que otros corredores se encolen. 
+
+
+ANALISIS:
+C corredores: corren maraton
+1 maquina expendedora de agua -> capacidad para 20 botellas
+1 repositor: reponer botellas de la maquina
+
+- inicia la carrera: cuando los C corredores han llegado al inicio
+- cuando un corredor termina la carrera: se dirige a la maquina expendedora y espera su turno (por orden de llegada), saca botella y se retira
+- maquina sin botellas: le avisa al repositor que cargue nuevamente la maquina con 20 botellas, espera a que hafa la recarga, saca botella y se retira
+
+- NOTA: mientras se reponen las botellas se debe permitir que otros corredores se encolen. 
+
+Estructuras a usar:
+- cola para respetar el orden de llegada
+- semaforos privados para despertar a cd proceso en su turno
+- recurso unico compartido --< maquina expendedora
+
+proceso adicional: REPOSITOR (podria ser la abuela en los ejemplos de la practica)
+- es despertado por otros procesos cuando se necesita su accion
+- hace una accion limitada (N veces), luego se duerme hasta que la vuelvan a llamar
+
+
+SOLUCION: 
+
+cola Cola;
+sem mutex = 1; //exclusion mutua para variables compartidas
+espera[C] = ([30] 0); //semaforos privados para cada corredor
+bool libre = true; //verificar si la maquina esta libre
+int llegaron = 0; //contador de corredores para ver cuando se inicia la carrera
+
+
+Process Corredor [id: 0 .. C-1]{
+
+    //inicio de la carrera:
+
+    P(mutex); //se usa para proteger la variable compartida llegaron, ya que varios la pueden incrementar al mismo tiempo
+    llegaron = llegaron + 1;
+    if (llegaron = C)
+        V(inicio); //el ultimo corredor habilita la carrera, V desbloquea el proceso que esta esperando en P
+    V(mutex); //se librera la variable compartida
+
+    P(inicio); //bloquea el inicio de la carrera hasta que todos lleguen
+    V(inicio); //una vez que se desbloquea la carrera en el if, los demas desbloquean su carrera tambien
+
+    //transcurso de la carrera: 
+    correrMaraton();
+
+    //fin de la carrera: el corredor quiere agua
+
+    P(mutex); //se va a trabajar con la variable compartida libre
+    if (libre){
+        libre: false; //si esta libre la maquina la ocupa
+        V(mutex);
+    } else{ 
+        push (Cola, id); //se encola para esperar la maquina por orden de llegada
+        V(mutex); //libera la variable compartida libre 
+        P(espera[id]);  //se bloquea esperando un lugar para cargar agua
+    }
+
+    //si llega aca es porque lo despertaron o la maquina esta libre
+    P(mutex); //se va a trabajar con la variable compartida reponiendo o la variable repuesto, se bloquea hasta que la liberen (depende si entra al if o no pero sirve para los dos casos este P)
+
+    if (stock == 0){ //si no hay botellas le tiene que avisar al repositor (otro proceso) que recargue 
+        if (!reponiendo){  
+            reponiendo = true;  //modifica la variable compartida para que no todos llamen al repositor, avisarles a los demas que ya esta reponiendo agua
+            V(reponer); // despierta al repositor para que cargue mas agua
+        }
+        V(mutex); //libera la variable reponiendo
+
+        P(repuesto); //se bloquea hasta que el repositor termine de cargar agua
+        P(mutex); //vuelve a la SC para moficar el stock
+    }
+
+    stock = stock - 1;
+    V(mutex); //libera la variable compartida stock
+
+    //libera o pasa su turno al siguiente corredor que estaba en la cola
+
+    P(mutex); //se trabaja con la variable compartida libre
+    if (empty(Cola)){ //si no hay nadie esperando libera la maquina
+        libre = true;
+    } else {
+        int prox;
+        pop(colaCorredores, prox);
+        V(espera[prox]);
+    }
+    V(mutex); //libera la variable compartida libre para que otros la puedan modificar
+
+
+}
+
+Process Repositor{
+    while(true){
+        P(reponer); //se bloquea hasta que alguien lo despierte para avisar que no hay agua
+        reponerBotellas();
+        P(mutex); //variable compartida stock y reponiendo
+        stock=20;
+        reponiendo = false;
+        V(repuesto); //libera repuesto para avisar a los corredores que ya tienen agua, que no esperen mas
+        V(mutex);
+
+    }
+}
+

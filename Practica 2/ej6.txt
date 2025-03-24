@@ -1,0 +1,123 @@
+EJERCICIO 6
+
+6. Una empresa de turismo posee 4 combis con capacidad para 25 personas cada una y UN vendedor que vende los pasajes a los clientes de acuerdo al orden de llegada. 
+Hay C clientes que al llegar intentan comprar un pasaje para una combi en particular (el cliente conoce este dato); si aún hay lugar en la combi seleccionada se le da el pasaje y se dirige hacia la combi; en caso contrario se retira. Cada combi espera a que suban los 25 pasajeros, luego realiza el viaje, y cuando llega al destino deja bajar a todos los pasajeros. Nota: maximizar la
+concurrencia; suponga que para cada combi al menos 25 clientes intentarán comprar pasaje. 
+
+ANALISIS: -------------------------------------------
+
+- 4 combis con capacidad para 25 personas
+- 1 vendedor: vende pasajes de acuerdo al ORDEN DE LLEGADA (cola)
+
+- C clientes: al llegar quieren comprar pasaje para DETERMINADA combi
+- si hay lugar en la combi: se le da el pasaje y se dirige a la combi
+- si no hay lugar en la combi: se retira 
+
+- INICIO de viaje: cd combi espera que suban los 25 pasajeros 
+- realiza viaje
+- LLEGADA de viaje: deja bajar a todos los pasajeros
+
+NOTA: para cada combi al menos 25 clientes intentan comprar pasaje.
+
+ESTRUCTURAS A USAR:
+
+del ejercicio 6 de la explicacion practica saco:
+- cola: para respertar orden de llegada
+- semaforos privados : despertar personas en su turno
+- manejar acceso a un recurso limitado (un paso: el vendedor)
+
+del ejercicio 3 saco:
+- sincronizacion de varios procesos antes de realizar accion grupal
+- contador + barrera : para que todos esperen hasta que esten los 25
+
+SOLUCION: ----------------------------------------------
+
+sem mutex = 1;                            // Acceso exclusivo a variables compartidas
+cola colaClientes;                        // Cola para respetar el orden de llegada
+sem espera[C] = ([C] 0);                  // Semáforos privados para clientes
+int cupo[4] = ([4] 25);                   // Cupos disponibles por combi
+
+// Para cada combi
+int subieron[4] = ([4] 0);                // Contador de los que subieron
+sem subir[4] = ([4] 0);                   // Esperan a que suban 25 para salir
+sem bajar[4] = ([4] 0);                   // Esperan a que llegue para bajar
+sem mutexCombi[4] = ([4] 1);              // Para proteger acceso por combi
+
+
+Process Cliente [id: 0..C-1] {
+
+    int miCombi = elegirCombi(); //cada cliente elije la combi que quiere (el cliente conoce este dato);
+
+    P(mutex);
+    push (colaClientes, id); //se encola para ser atendido
+    V(mutex);
+
+    P(espera[id]); //espera a que el vendedor lo llame
+
+    if(!tienePasaje[id]){ //tienePasaje es una variable compartida que modifica el vendedor con true o false, no se accede con semaforos porque no la vamos a editar, solo a consultarla
+        return; //si no hay pasajes el cliente se vuelve a su casa
+    }
+
+    P(subir[miCombi]); //el cliente se bloquea hasta que haya lugar para entrar a la combi (que debe tener una puerta para una persona a la vez)
+
+    P(mutexCombi[miCombi]); //se bloquea para usar la variable compartida subieron
+    subieron[miCombi] ++;
+    V(mutexCombi[miCombi]); //libera la variable compartida 
+
+    //espera a llegar a destino
+    P(bajar[miCombi]);
+
+    //baja de la combi
+
+}
+
+
+Process Vendedor {
+
+    int id, combiElegida;
+
+    while(true){
+        P(mutex); // para modificar la variable compartida cola
+        if(!empty(Cola)){
+            pop(cola, id);
+            V(mutex); //libera la variable compartida cola
+
+            combi = obtenerCombiCliente (id); //se recupera la combi del cliente 
+
+            P(mutex[combiElegida]); //para trabajar con la variable compartida cupo, 
+            //si el vendedor atiende de a una persona no necesitariamos proteger el cupo 
+
+            if (cupo[combiElegida]) > 0 {
+                cupo[combiElegida] -= 1;
+                tienePasaje[id] = true; 
+                V(espera[id]); //le avisa al cliente que continue
+                V(subir[combiElegida]); //le da acceso al cliente para subir a la combi
+            } else{
+                tienePasaje[id] = false;
+                V(espera[id]); //avisa al cliente que continue, va a entrar por el return ya que no hay lugar
+            }
+
+            V(mutexCombi[combiElegida]); //libera la variable compartida cupo
+            
+        } else{
+            V(mutex); //libero
+        }
+    }
+}
+
+Process Combi[i: 0..3]{
+    int j;
+
+    //espera a que suban 25
+    for (j=1 to 25){
+        P(subir[i]);  //suben de a uno 
+    }
+
+    viajar();
+
+    for (j = 1 to 25){
+        V(bajar[i]); //bajan de a uno
+    }
+
+
+}
