@@ -1,0 +1,64 @@
+EJERCICIO 3
+
+3. En un corralón de materiales hay un empleado que debe atender a N clientes de acuerdo al  orden de llegada. Cuando un cliente es llamado por el empleado para ser atendido, le da una  lista con los productos que comprará, y espera a que el empleado le entregue el  comprobante de la compra realizada. 
+
+ANALISIS
+- 1 empleado
+- N clientes
+- orden de llegada
+
+el cliente espera que lo llame el empleado para ser atendido
+el cliente le da una lista de productos que comprara al Empleado
+el cliente espera que el empleado le entregue el comprobante de la compra realizada
+
+- MODELO CLIENTE SERVIDOR ej 6 de la exp practica
+
+SOLUCION
+
+Process Cliente [id:0..N-1]{
+    text lista, comprobante; //la lista se la envio y el comprobante lo recibo
+    Corralon.Pedido(id, lista, comprobante);
+}
+
+Process Empleado{
+    text lista, comprobante;
+    int idCliente;
+    while(true){
+        Corralon.Siguiente(idCliente,lista)
+        comprobante = generarComprobante(l);
+        Corralon.Entregar(idC, comprobante);
+    }
+}
+
+Monitor Corralon{
+    cola pedidos;
+    cond espera[N]; //condicion por cliente para que cd uno espere su resultado de forma individual
+    cond hayPedidos; //empleado espera si no hay nadie
+    text listas[N]; //lista de cd cliente
+    text comprobantes[N]; //comporbante para cd cliente
+
+    Procedure Pedido(idCliente: in int, Lista:in text, comprobante: out text){
+        push (pedidos, idCliente); //encola al cliente ya que se atiende por orden de llegada
+        listas[idC] = lista; //guarda su lista
+        signal(hayPedidos); //avisa al empleado
+        wait (espera[idCliente]); //espera el comprobante
+        comprobante = comprobantes[idCliente]; //lo recibe 
+    }
+
+    Procedure Siguiente(idCliente: out int, Lista:out text){
+        if (empty(pedidos))
+            wait (hayPedidos); //espera que haya pedidos
+        pop (pedidos, idCliente); //saca al siguiente cliente
+        Lista = listas[idCliente]; //obtiene la lista de productos
+        
+    }
+
+    Procedure Entregar (idCliente: in int, Comprobante: in text){
+        comprobantes[idCliente] = comprobante; 
+        signal(espera[idCliente]);
+    }
+
+
+}
+
+
