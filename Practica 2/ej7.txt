@@ -1,0 +1,76 @@
+7. En una herrería hay 15 empleados que forman 5 grupos de 3 personas; los grupos se forman
+de acuerdo al orden de llegada (los 3 primeros pertenecen al grupo 1, los 3 siguientes al grupo
+2, y así sucesivamente). Ni bien conoce el grupo al que pertenece el empleado comienza a
+trabajar (no debe esperar al resto de grupo para comenzar). Cada grupo debe hacer
+exactamente P unidades de un producto (cada unidad es hecha por un único empleado). Al
+terminar de hacer las P unidades de un grupo, sus 3 empleados se retiran. Nota: maximizar
+la concurrencia; ningún grupo puede hacer unidades de más. 
+
+
+//ANALISIS: 
+- 15 empleados, forman 5 grupos de 3 personas
+- grupos: se formna de acuerdo al ORDEN DE LLEGADA
+- INICIO de trabajo: cuando conoce el nro de grupo al que pertenece (no debe esperar al resto del grupo para comenzar)
+- TRABAJO: cd grupo hace P unidades de un producto (cd unidad es hecha por un unico empleado)
+- TERMIANCION de trbaajo: al terminar las p unidades, los 3 empleados se retiran
+
+NOTA: no hacer unidades de mas
+
+//ESTRUCTURAS A UTILIZAR:
+
+del ejercicio 3 saco esto:
+- contadores compartidos 
+- sincronizacion dentro de grupos
+- control de cantidad maxima de eventos
+- despertar a varios procesos cuando se cumple la condicion
+
+del ejercicio 6 saco esto:
+- orden de llegada para asiganr turnos
+- cola + semaforos privados para controlar ingreso
+
+//SOLUCION: 
+sem mutex = 1;                   // Exclusión para variables compartidas
+int contador = 0;                   // Contador de orden de llegada
+int grupoDe[15];                 // Para guardar a qué grupo pertenece cada empleado
+
+int produccion[5] = ([5] 0);     // Unidades hechas por cada grupo
+sem permiso[5] = ([5] 1);        // Semáforo para controlar que no se produzca más de P por grupo
+
+
+
+Process Empleado [id: 1..15]{
+
+    int miGrupo; 
+
+    P(mutex); //para usar variable compartida contador, varios empleados pueden aumentar al mismo tiempo
+    miGrupo = contador /3;
+    grupoDe[id] = miGrupo;
+    contador ++;
+    V(mutex);
+
+    //el empleado comienza su trabajo sin esperar a sus companieros
+    while (true){
+
+        P(permiso[miGrupo]); //para que solo un empleado del grupo a la vez pueda entrar a la SC donde se consulta la cantidad de unidades que se hicieron y aumentar el contador
+        //permiso se inicializa en 1 entonces el primer empleado puede entrar bien
+
+        P(mutex);
+        if (produccion[miGrupo] <P){
+            produccion[miGrupo]++; 
+            V(mutex); //libera la variable compartida del contador de unidades 
+            V(permiso[miGrupo]); //permite que otro companiero siga
+            hacerUnidad(id, miGrupo);
+
+        } else{
+            V(mutex); //no se produce mas y se retira
+            break;
+        }
+
+    }
+
+
+
+
+
+
+}
