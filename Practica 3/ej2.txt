@@ -13,7 +13,7 @@ f) Modificar la solución (e) para el caso en que sean 10 fotocopiadoras. El emp
 ANALISIS
 - N personas para fotocopiar un doc cd una
 
-INCISO A
+INCISO A ---------------------------------------
 - 1 fotocopiadora COMPARTIDA (hay que administrarle el acceso) --> una persona a la vez
 - no importa el orden
 - fotocopiar() --> simula el uso de la fotocopiadora
@@ -29,7 +29,9 @@ entonces:
 SOLUCION
 
 Process Persona [id: 0..N-1]{
-
+    Fotocoopiadora.Entrar();
+    Fotocopiar();
+    Fotocopiadora.Salir();
 }
 
 Monitor Fotocopiadora{
@@ -43,5 +45,262 @@ Monitor Fotocopiadora{
     Procedure Salir(){
         ocupada = false;
         signal(espera); //despierta a la persona que esta esperando si es que hay
+    }
+}
+
+ANALISIS B -----------------------------------------------
+- 1 fotocopiadora COMPARTIDA (hay que administrarle el acceso) --> una persona a la vez
+- POR ORDEN DE LLEGADA (la primera persona en llegar debe ser la primera en fotocopiar) --> COLA ORDENADA FIFO
+
+- fotocopiar() --> simula el uso de la fotocopiadora
+- los procesos representan a las personas
+
+SOLUCION 
+
+Process Persona [id: 0..N-1]{
+    Fotocoopiadora.Entrar();
+    Fotocopiar();
+    Fotocopiadora.Salir();
+}
+
+Monitor Fotocopiadora{
+    bool ocupada = false;
+    cond cola; 
+    int esperando = 0;
+
+    Procedure Entrar(){
+        if (ocupada){
+            esperando ++; 
+            wait (espera);
+        } 
+        ocupada = true;
+    }
+    Procedure Salir(){
+        if (esperando>0){
+            esperando --;
+            signal(cola); //despierta al primero de la cola
+        }
+        ocupada = false;
+    }
+}
+
+
+ANALISIS c ----------------------------------
+
+- 1 fotocopiadora COMPARTIDA (hay que administrarle el acceso) --> una persona a la vez
+- POR  EDAD 
+
+- fotocopiar() --> simula el uso de la fotocopiadora
+- los procesos representan a las personas
+
+
+SOLUCION
+
+
+Process Persona [id: 0..N-1]{
+    bool edad = ...;
+
+    Fotocoopiadora.Entrar(id,edad);
+    Fotocopiar();
+    Fotocopiadora.Salir();
+}
+
+Monitor Fotocopiadora{
+    bool ocupada = false;
+    cond espera[N]; //arreglo ordenado, uno por cd persona 
+    int esperando = 0;
+    colaOrdenada fila;
+    int idAux;
+
+    Procedure Entrar(idP, edad: in int){
+        if (ocupada){
+            insertar(fila, idP, edad); //inserto en la cola por prioridad
+            esperando ++; 
+            wait (espera[idP]); //duermo a la persona correspondiente segun id
+        } 
+        ocupada = true;
+    }
+    Procedure Salir(){
+        if (esperando>0){
+            esperando --;
+            sacar(fila, idAux) //saco al primero de la fila
+            signal(espera[idAux]); //despierta al primero de la cola 
+        }
+        ocupada = false;
+    }
+}
+
+
+ANALISIS D ---------------------------------
+
+- 1 fotocopiadora COMPARTIDA (hay que administrarle el acceso) --> una persona a la vez
+- ORDEN POR ID DE PROCESO - NO POR EDAD, NI LLEGADA
+(en vez de usar una cola ordenada por edad usamos una secuencia estricta por ID) --> turno global que indique que proceso puede entrar
+
+- fotocopiar() --> simula el uso de la fotocopiadora
+- los procesos representan a las personas
+
+
+Process Persona [id: 0..N-1]{
+    bool edad = ...;
+
+    Fotocoopiadora.Entrar(id); 
+    Fotocopiar();
+    Fotocopiadora.Salir();
+}
+
+Monitor Fotocopiadora{
+    bool ocupada = false;
+    cond espera[N]; //arreglo ordenado, uno por cd persona 
+    int turnoEsperado = 0; //empieza en 0 y va aumentando de a uno
+
+    Procedure Entrar(idP, edad: in int){
+        if (idP != turnoEsperado || ocupada){
+            wait (espera[idP]); //duermo a la persona correspondiente segun id
+        } 
+        ocupada = true;
+    }
+    Procedure Salir(){
+        ocupada = false;
+        turnoEsperado ++; //avanza al siguiente turno
+        signal (espera [turnoEsperado]); //despierta al proceso con ese ID
+    }
+}
+
+
+ANALISIS E --------------------------------------------------
+
+- 1 fotocopiadora COMPARTIDA (hay que administrarle el acceso) --> una persona a la vez
+- POR ORDEN DE LLEGADA (la primera persona en llegar debe ser la primera en fotocopiar) --> COLA ORDENADA FIFO
+
+- fotocopiar() --> simula el uso de la fotocopiadora
+- los procesos representan a las personas
+
+- hay un EMPLEADO que le indica a cd persona cuando usar la fotocopiadora
+- la persona espera que el empleado le diga que puede pasar
+
+ESTRATEGIA MODELO CLIENTE SERVIDOR - EJ 6 de la exp practica
+
+
+SOLUCION 
+
+Process Persona [id: 0..N-1]{
+    Fotocoopiadora.Entrar();
+    Fotocopiar();
+    Fotocopiadora.Salir();
+}
+
+Process Empleado {
+    while (true){
+        Fotocopiadora.DarPermiso();
+    }
+}
+
+Monitor Fotocopiadora{
+    cola fila; //cola FIFO de espera
+    cond esperaPersona[N]; //condicion privada por persona
+    cond hayPersonas; // empleado espera si no hay nadie 
+    int esperando = 0; // cantidad de personas esperando
+    bool ocupada = false; //si la fotocopiadora esta ocupada
+    int actual = -1; //id de la persona que esta usando la fotocopiadora
+
+
+    Procedure Entrar(idP: in int){
+
+        push (fila,idP); //encolo a la persona que llego
+        esperando ++;
+        signal(hayPersonas); //avisa al empleado que hay alguien esperando, lo despierta
+        wait (esperaPersona[idP]); //espera a que el empleado lo autorice
+        ocupada = true; 
+        actual = idP; //id de la persona qe usa la fotocopiadora
+    }
+
+    Procedure Salir(){
+        ocupada = false;
+    }
+
+    Procedure DarPermiso(){
+        if (esperando == 0 || ocupada){
+            wait (hayPersonas);
+        }
+        int idSiguiente;
+        pop(fila, idSiguiente);
+        esperando--;
+        signal(esperaPersona[idSiguiente]); //autoriza a la persona siguiente en la cola FIFO
+
+    }
+}
+
+
+ANALISIS EJERCICIO 7 -----------------------------------
+
+
+- 10 fotocopiadoras COMPARTIDAS (hay que administrarle el acceso) --> una persona a la vez
+- POR ORDEN DE LLEGADA (la primera persona en llegar debe ser la primera en fotocopiar) --> COLA ORDENADA FIFO
+
+- fotocopiar() --> simula el uso de la fotocopiadora
+- los procesos representan a las personas
+
+- hay un 1 EMPLEADOS que le indican a cd persona cuando usar la fotocopiadora
+- la persona espera que el empleado le diga que puede pasar
+
+ESTRATEGIA MODELO CLIENTE SERVIDOR - EJ 7 de la exp practica
+
+
+Process Persona [id: 0..N-1]{
+    int idF; //id de la fotocopiadora
+    Fotocoopiadora.Entrar(id, idF); // espera a ser auroizado y recibe cual es la fotocopiadora que puede usar
+    Fotocopiar(idF);
+    Fotocopiadora.Salir(idF);
+}
+
+Process Empleado {
+    while (true){
+        Fotocopiadora.DarPermiso();
+    }
+}
+
+Monitor Fotocopiadora{
+    cola fila; //cola FIFO de espera
+    cond esperaPersona[N]; //condicion privada por persona
+    cond hayPersonas; // empleado espera si no hay nadie 
+    int esperando = 0; // cantidad de personas esperando
+
+    bool ocupadas[10];
+    int asignada[N];
+
+
+    Procedure Entrar(idP: in int, idF: out int){
+
+        push (fila,idP); //encolo a la persona que llego
+        esperando ++;
+        signal(hayPersonas); //avisa al empleado que hay alguien esperando, lo despierta
+        wait (esperaPersona[idP]); //espera a que el empleado lo autorice
+        idF = asignada[idP];
+    }
+
+    Procedure Salir(){
+        ocupadas[idF] = false; //libera la fotocopiadora
+    }
+
+    Procedure DarPermiso(){
+        if (esperando == 0 ){
+            wait (hayPersonas); //espera hasta que haya alguien esperando el uso de la fotocopiadora
+        }
+
+        int i = 0;
+        while (i < 10 && ocupadas[i]) {
+            i++;
+        }
+
+        if (i == 10) return;              // no hay fotocopiadora libre por ahora
+
+        int idP;
+        pop(fila, idP);
+        esperando--;
+        ocupadas[i] = true;
+        asignada[idP] = i; //le asigna la fotocopiadora i
+        signal(esperaPersona[idP]); //autoriza a la persona siguiente en la cola FIFO
+
     }
 }
