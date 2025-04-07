@@ -1,0 +1,111 @@
+EJERCICIO 4
+
+En una mesa de exámenes hay 3 profesores que les deben tomar un examen oral a 30 alumnos  de acuerdo al orden de llegada. Cada examen es tomado por un único profesor. Cuando un  alumno llega, espera a que alguno de los profesores (cualquiera) lo llame y se dirige al  escritorio correspondiente a ese profesor, donde le tomará el examen; al terminar el profesor le da la nota y el alumno se retira. Cuando un profesor está libre llama al siguiente  alumno. Nota: todos los procesos deben terminar su ejecución.  
+
+ANALISIS:
+- 3 profesores: toman examenes orales
+- 30 alumnos: rinden examenes orales
+- ORDEN DE LLEGADA (cola con orden FIFO)
+- cd examen lo toma un unico profesor
+
+alumno:
+1. llega
+2. espera a que algun profesor lo llame
+3. se dirige al escritorio del profesor correspondiente
+4. toma el examen
+5. recibe la nota
+6. se retira
+
+profesor:
+1. llama a un alumno
+2. toma el examen oral
+3. le da la nota al alumno
+4. si no hay mas alumnos termina su trabajo
+
+SOLUCION
+
+process Alumno[id: 0..29]{
+    int idProf, nota;
+    MesaExamen.llegar(id, idProf); //se encola y recibe el id del profesor que lo atendera
+    Escritorio[idProf].Rendir(id); //da su id y recibe la nota
+
+}
+
+process Profesor[id: 0..2]{
+    int idAlumno;
+    text nota;
+    while(MesaExamen.HayAlumnos()){ //repite mientras queden alumnos sin atender
+        if(MesaExamen.Proximo(id)){ //si hay alumno asignado continua
+            Escritorio[id].EsperarAlumno(idAlumno); //espera a que el alumno llegue
+            nota = TomarExamen(idAlumno); //simula examen
+            Escritorio[id].enviarNota(nota); //envia nota
+        }
+    }
+
+}
+
+Monitor Escritorio[id:0..2]{
+
+    cond vcAlumno, vcProfesor;
+    text nota;
+    int idAlumno;
+    bool listo = false;
+
+    Procedure Rendir(idA: in int){
+        idAlumno= idA;
+        listo = true;
+        signa;(vcProfesor); //le avisa al profesor que llego para rendir
+        wait (vcAlumno); //espera la nota
+    }
+
+    Procedure EsperarAlumno(idA: out int) {
+        if (not listo) wait(vcProfesor);  // ① Espera que el alumno llegue
+        idA = idAlumno;
+    }
+
+    Procedure EnviarNota(n: in text) {
+        nota = n;
+        signal(vcAlumno);            // ① Despierta al alumno con la nota
+        listo = false;
+    }
+
+
+
+}
+
+Monitor MesaExamen {
+    cola alumnos;
+    cola libres;
+    cond esperaAlumnos, esperaProfesores;
+    int asigando[30];
+    int totalAtendidos = 0;
+    int total_alumnos = 30;
+
+    Procedure Llegar(idA: in int, idP: out int){
+        push(alumnos, idA); //el alumno se encola
+        if(empty(libres)) //si no hay profesores libres espera
+            wait(esperaAlumnos);
+        pop(libres, idP); //si hay algun profe libre lo toma de la cola
+        asignado[idA] = idP;
+        signal(esperaProfesores);
+    }
+
+    Procedure Proximo(idP: in int): bool{
+        if (totalAtendidos >= total_alumnos) return false; //si ya se atendieron todos no continua
+        push (libres, idP); //se declara profesor libre
+        if(empty (alumnos)) wait (esperaProfesores); //el profe se duerme esperando al alumno
+        if (empty(alumnos)) return false; //vuelve a verificar desp de dormirse
+
+        int idAlumno;
+        pop(alumnos, idAlumno); //toma al proximo alumno
+        totalAtendidos++; 
+        signal(esperaAlumnos); //despiertta al alumno que esta esperando 
+        return true;
+
+    }
+
+    Procedure HayAlumnos(){
+        return totalAtendidos < total_alumnos;
+    }
+
+}
