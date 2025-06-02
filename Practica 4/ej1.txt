@@ -1,0 +1,29 @@
+EJERCICIO 1 - PMA: PASAJE DE MENSAJE ASINCRONICO
+
+Suponga que N personas llegan a la cola de un banco. Para atender a las personas existen 2
+empleados que van atendiendo de a una y por orden de llegada a las personas. 
+
+ANALISIS DEL EJERCICIO
+- N personas llegan a la cola de banco
+- N personas esperan ser atendidas
+- 2 empleados atienden de a una persona por orden de llegada --> no le tienen que responder a la persona. 
+-----------------------------------------------------------------------------
+
+
+chan Pedidos (int);
+
+Process Persona [id: 0..N-1]{
+    while(true){
+        send Pedidos(id); //la persona envia su id
+        //espera
+
+    }
+}
+
+Process Empleado[id:0..1]{
+    int idPersona;
+    while(true){
+        receive Pedidos(idPersona); //atiende a la persona por orden de llegada
+        atender(idPersona)
+    }
+}
