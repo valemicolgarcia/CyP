@@ -1,0 +1,34 @@
+EJERCICIO 1 - PMS
+
+En una empresa de software hay un empleado Testeo que prueba un nuevo
+producto para encontrar errores, cuando encuentra uno generan un reporte para
+que otro empleado Mantenimiento corrija el error y le responda. El empleado
+Mantenimiento toma los reportes para evaluarlos, hacer las correcciones necesarias
+y responderle al empleado Testeo.
+
+- 1emp Testeo: encuentra error, genera reporte
+- 1emp Mantenimiento: toma reportes, hace correcciones
+- 1emp Mantenimeitno: responde a Testeo
+
+
+Process Testeo{
+    texto R;
+    texto Res;
+
+    while(true){
+        R=generarReporte();
+        Mantenimiento!reporte(R); 
+        Mantenimeitno?respuesta(Res);
+    }
+}
+
+Process Mantenimeitno{
+    texto R;
+    texto Res;
+    while (true){
+        Testeo?reporte(R);
+        Res = generarRespuesta(R);
+        Testeo!respuesta(Res);
+    }
+
+}
