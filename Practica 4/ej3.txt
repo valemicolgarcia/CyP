@@ -1,0 +1,81 @@
+EJERCICIO 3
+
+Se debe modelar una casa de Comida Rápida, en el cual trabajan 2 cocineros y 3
+vendedores. Además, hay C clientes que dejan un pedido y quedan esperando a que se lo
+alcancen.
+
+Los pedidos que hacen los clientes son tomados por cualquiera de los vendedores y se lo
+pasan a los cocineros para que realicen el plato. Cuando no hay pedidos para atender, los
+vendedores aprovechan para reponer un pack de bebidas de la heladera (tardan entre 1 y 3
+minutos para hacer esto).
+
+Repetidamente cada cocinero toma un pedido pendiente dejado por los vendedores, lo
+cocina y se lo entrega directamente al cliente correspondiente.
+Nota: maximizar la concurrencia. 
+
+------------------------------------------------------------------------------------------------
+ANALISIS DEL EJERCICIO
+
+- C clientes dejan pedido a cualquier vendedor
+- C clientes esperan que le almacenen su pedido
+
+- 3 vendedores toman pedidos
+- 3 vendedores pasan pedido a cocinero
+- 3 vendedores: si no hay pedidos se van a reeponer bebidas  --> para eso necesito un admin ya que hay 3 venddeores no puedo usar empty
+
+- 2 cocineros reciben pedido
+- 2 cocineros cocina pedido
+- 2 cocineros entrega pedido al cliente
+
+------------------------------------------------------------------------------------------------
+
+
+Process Cliente [id: 0..C-1]{
+    texto plato;
+
+    while(true){
+        send Pedidos(id);
+        receive Comida[id] (plato);
+    }
+}
+
+Process Vendedor [id: 0..2]{
+    texto ped;
+
+    while(true){
+        Send ProximoPedido(id);
+        Receive Siguiente (ped, idCliente); //el vendedor le pide a admin el proximo pedido
+        if (ped <> "Vacio") send Plato(idCliente);
+        else delay(3minutos);
+
+    }
+
+}
+
+Process Admin{
+    texto ped;
+    int idCliente;
+    int idVende;
+
+    while true{
+        Receive ProximoPedido (idVende)
+
+        if (empty(Pedidos)) {
+            ped = "Vacio"
+        } else{
+            Receive Pedidos(idCliente);
+        }
+        send Siguiente[idVende] (ped, idCliente);
+
+    }
+}
+
+Process Cocinero [id:0..1]{
+    while(true){
+        Receive Plato(idCliente);
+        com = cocinar(id);
+        Send Comida[idCliente](com);
+    }
+
+}
+
