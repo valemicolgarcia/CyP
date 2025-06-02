@@ -7,7 +7,12 @@ ANALISIS DEL EJERCICIO
 - N personas llegan a la cola de banco
 - N personas esperan ser atendidas
 - 2 empleados atienden de a una persona por orden de llegada
+
+------------------------------------------------------------------------------------
+DUDA: creo que como esta planteada la consigna no hace falta que haya respuesta, osea mejor la opcion 2
 -----------------------------------------------------------------------------
+
+OPCION 1
 
 chan llego(int);
 chan atendido[0..N-1](bool);
@@ -32,4 +37,20 @@ Process Empleado [id:0..1]{
 
     //atiende al cliente 
     send atendido[idCliente](1);
+}
+
+OPCION 2:
+
+chan llego(int);
+
+Process Persona[id:0..N-1]{
+
+    send llego(id);
+    //espera ser atendido
+}
+
+Process Empleado [id:0..1]{
+
+    receive llego(idCliente);
+    atender(idCliente);
 }

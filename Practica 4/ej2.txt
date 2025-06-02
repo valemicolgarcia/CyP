@@ -1,0 +1,53 @@
+EJERCICIO 2
+
+Se desea modelar el funcionamiento de un banco en el cual existen 5 cajas para realizar pagos. Existen P personas que desean pagar. Para esto cada una selecciona la caja donde hay menos personas esperando, una vez seleccionada espera a ser atendido.
+NOTA: maximizando la concurrencia. 
+
+ANALISIS DEL EJERCICIO
+- Funcionamiento de un banco
+
+- 5 cajas para realizar pagos
+- P personas : selecciona caja donde hay menos personas esperando
+- P personas: una vez seleccionada la caja espera a ser atendido
+- P personas: una vez que es atendido paga y se retira
+
+- tenemos 5 cajas y tenemos que tener 5 canales ya que si importa quien es el empleado que atendemos, el mismo elige la caja
+
+
+SOLUCION
+
+chan PedidoCaja(int);      // Persona pide a Coordinador caja con menos cola (envía su ID)
+chan CajaElegida[P](int);       // Coordinador responde a cada persona con la caja que debe elegir
+chan Pedidos[5](int);           // Canales por caja para pedidos de atención
+chan Respuestas[P](texto);      // Opcional, canal para que la caja confirme a cada persona
+
+
+Process Persona [id: 0..N-1]{
+    int caja;
+    send PedidoCaja(id); // le pide al admin que le diga la caja
+    receive CajaElegida[id](caja); //recibe la caja
+    send Pedidos[caja](id); //envia su pedido a la caja CajaElegida
+    receive Respuestas[id]("Listo");
+}
+
+Process Admin {
+    int idPersona;
+    int caja;
+    int colas([5] 0);
+    while(true){
+        receive PedidoCaja(idPersona, 0);
+        caja = min(colas);
+        colas[caja] ++;
+        send CajaElegida[idPersona](caja);
+    }
+}
+
+
+Process Caja [id: 0..4]{
+    int idPersona;
+    while(true){
+        receive Pedidos[id](idPersona);
+        //atiende a la persona
+        send Respuestas[idPersona]("Listo")
+    }
+}
