@@ -1,0 +1,50 @@
+EJERCICIO 2 - MODIFICAICON DE EJERCICIO 1 (con rta)
+
+
+En una empresa de software hay N personas que prueban un nuevo producto
+para encontrar errores, cuando encuentran uno generan un reporte para que un
+empleado corrija el error y esperan la respuesta del mismo. El empleado
+toma los reportes de acuerdo al orden de llegada, los evalúan, hace las
+correcciones necesarias y le responde a la persona que hizo el reporte
+
+- N personas prueban producto
+- N personas envian reporte 
+- N personas espera respuesta
+
+- 1 empleado toma reportes por orden de llegada
+- 1 empelado corrige el error
+- 1 empleado envia respuesta
+
+
+chan Reportes(int, texto);
+chan Respuesta[N] (texto);
+
+Process Persona[id:0..N-1]{
+    
+    texto rep;
+    textp Resp;
+
+    while(true){
+
+        rep = generar reporte(); //prueba producto y genera rep
+        send Reporte(rep, id); //no recibe respuesta, solo envia 
+        receive Respuesta[id](Resp);
+
+    }
+}
+
+Process Empleado{
+
+    texto Resp;
+    int idPersona;
+    
+    while(true){
+
+        receive(rep,idPersona );
+        Resp = corregirError(rep);
+        send Respuesta[idPersona](Resp)
+        
+
+    }
+
+}
