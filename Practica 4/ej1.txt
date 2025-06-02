@@ -6,24 +6,30 @@ empleados que van atendiendo de a una y por orden de llegada a las personas.
 ANALISIS DEL EJERCICIO
 - N personas llegan a la cola de banco
 - N personas esperan ser atendidas
-- 2 empleados atienden de a una persona por orden de llegada --> no le tienen que responder a la persona. 
+- 2 empleados atienden de a una persona por orden de llegada
 -----------------------------------------------------------------------------
 
+chan llego(int);
+chan atendido[0..N-1](bool);
 
-chan Pedidos (int);
+Process Persona[id:0..N-1]{
+    bool fin;
+    
+    //llegada
+    send llego(id);
 
-Process Persona [id: 0..N-1]{
-    while(true){
-        send Pedidos(id); //la persona envia su id
-        //espera
+    //espera a ser atendido
+    receive atendido[id](fin);
 
-    }
+    //se va
 }
 
-Process Empleado[id:0..1]{
-    int idPersona;
-    while(true){
-        receive Pedidos(idPersona); //atiende a la persona por orden de llegada
-        atender(idPersona)
-    }
+Process Empleado [id:0..1]{
+
+    int idCliente;
+    //recibe al cliente
+    receive llego(idCliente);
+
+    //atiende al cliente 
+    send atendido[idCliente](1);
 }
