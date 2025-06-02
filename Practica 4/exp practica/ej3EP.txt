@@ -1,0 +1,47 @@
+EJERCICIO 3
+
+En una empresa de software hay N personas que prueban un nuevo producto
+para encontrar errores, cuando encuentran uno generan un reporte para que
+alguno de los 3 empleados corrija el error y esperan la respuesta del mismo. 
+
+Los empleados toman los reportes de acuerdo al orden de llegada, los evalúan, hacen
+las correcciones necesarias y le responden a la persona que hizo el reporte
+
+- N personas prueban producto
+- N personas generan reporte
+- N personas envian reporte a cualquier empleado, no import cua
+
+- 3 empleados reciben reporte y id
+- 3 empleados corrigen error
+- 3 empleados envian respuesta a la persona corresponeidnete
+
+
+chan Reporte(texto, int);
+chan Respuesta[N](texto);
+
+Process Persona [id: 0.. N-1]{
+    texto repsuesta;
+    texto rep;
+    while(true){
+        rep = generarReporte();
+        send Reporte(rep,id); //le mando el id porq quiero que me responda
+        receive Respuesta[id](respuesta);
+
+    }
+}
+
+Process Empleado [id: 0..2]{
+
+    texto Resp;
+    int idPersona;
+    
+    while(true){
+        
+        receive(rep,idPersona );
+        Resp = corregirError(rep);
+        send Respuesta[idPersona](Resp)
+        
+
+    }
+
+}
