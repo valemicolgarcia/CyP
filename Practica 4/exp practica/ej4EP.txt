@@ -1,0 +1,47 @@
+EJERCICIO 4 - MODIFICACION DE EJERCICIO 1 (sin respuesta)
+
+En una empresa de software hay N personas que prueban un nuevo producto
+para encontrar errores, cuando encuentran uno generan un reporte para que un
+empleado corrija el error (las personas no deben reciben ninguna respuesta). 
+
+El empleado toma los reportes de acuerdo al orden de llegada, los evalúan y hace las
+correcciones necesarias; cuando no hay reportes para atender el empleado se
+dedica a leer durante 10 minutos.
+
+
+- N personas prueban producto
+- N personas envian reporte 
+- N personas no reciben respuesta
+
+- 1 empleado toma reportes por orden de llegada
+- 1 empelado corrige el error
+- si no hay error se va a leer por 10 minutos
+
+
+chan Reportes(texto);
+
+Process Persona[id:0..N-1]{
+    
+    texto rep;
+    while(true){
+
+        rep = generar reporte(); //prueba producto y genera rep
+        send Reporte(rep); //no recibe respuesta, solo envia 
+
+    }
+}
+
+Process Empleado{
+
+    while(true){
+        
+        if (not empty(Reporte)){
+            receive Reporte(rep);
+            corregirError(rep);
+        } else{
+            delay(600)
+        }
+
+    }
+
+}
