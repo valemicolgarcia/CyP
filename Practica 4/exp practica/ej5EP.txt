@@ -1,0 +1,55 @@
+EJERCICIO 5
+
+En una empresa de software hay N personas que prueban un nuevo producto
+para encontrar errores, cuando encuentran uno generan un reporte para que uno
+de los 3 empleados corrija el error (las personas no deben reciben ninguna
+respuesta). Los empleados toman los reportes de acuerdo al orden de llegada, los
+evalúan y hacen las correcciones necesarias; cuando no hay reportes para atender
+los empleados se dedican a leer durante 10 minutos.
+
+- N personas generan reporte
+- N personas envian rep a un empleado
+- 3 empleados toman reportes
+- 3 empleados envian Respuestas
+- 3 empleados: si no hay reportes se van a dormir
+- la solucion anterior del enmpty no me sirve porque con 1 reporte, tres empelados preguntan por el empty y dos quedan bloquedos
+
+chan Reportes(texto);
+
+Process Persona[id:0..N-1]{
+    
+    texto rep;
+    while(true){
+
+        rep = generar reporte(); //prueba producto y genera rep
+        send Reporte(rep); //no recibe respuesta, solo envia 
+
+    }
+}
+
+Process Admin {
+    int idEmpleado;
+    texto sig;
+    while(true){
+        receive Pedido(idEmpleado); //el empleado le pide reporte
+        if (empty Reporte) rep = 'vacio'
+        else receive Reporte(rep); //recibo e reporte de la persona
+        send Siguieente[idEmpleado] (Rep); //le mando el reporte al empelado
+
+    }
+}
+
+
+Process Empleado[id:0..2]{
+
+    texto Rep;
+    while(true){
+
+        send Pedido(id); //le pide al admin un reporte
+        receive Siguiente[id](rep); //espera rta del admin, reporte o vacio
+        if (rep <> "Vacio") resolver(rep)
+        else delay(600)
+
+    }
+
+}
