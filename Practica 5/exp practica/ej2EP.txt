@@ -1,0 +1,52 @@
+EJERCICIO 2
+Se debe modelar la atención en un banco por medio de un único empleado. Los
+clientes llegan y esperan a lo sumo 10 minutos a ser atendido de acuerdo al orden
+de llegada. Pasado ese tiempo se retira sin ser atendido.
+
+Atencion de banco: procedure Banco
+n clientes: task type
+Cliente: llega y espera maximo 10 minutos a ser atendido> orden de llegada
+Cliente: si pasaron 10 minutos se va
+ESTRUCTURA: select (----) or delay
+Empleado: atiende cliente por orden de llegada
+
+
+EJERCICIO---------------------------
+Procedure Banco2 is
+
+//DECLARACION DE TASK Y TASK TYPE -----------------------------------
+Task empleado is
+    Entry Pedido( D: IN datos, R: OUT texto);
+End empleado
+
+Task type cliente;
+arrClientes: array(1..N) of Cliente;
+
+//DECLARACION DE TASK BODY ------------------------------
+
+Task body Cliente is
+Begin
+
+    SELECT 
+        Empleado.Pedido("datos", Resultado);
+    OR DELAY 600.0
+        null
+    END SELECT
+
+End cliente;
+
+Task body empleado is
+Begin
+    loop
+        accept Pedido(D:IN texto, R:out texto)
+            R:= resolverPedido(D);
+        end Pedido
+    end loop
+End empleado;
+
+
+Begin
+    null
+End Banco2
+
+-------------------
