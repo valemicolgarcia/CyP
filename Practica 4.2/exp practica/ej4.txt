@@ -1,0 +1,42 @@
+EJERCICIO 4
+
+En una empresa de software hay N empleados Testeo que prueban un nuevo
+producto para encontrar errores, cuando encuentra uno generan un reporte para
+que uno de los 3 empleados Mantenimiento corrija el error y le responda. Los
+empleados Mantenimiento toma los reportes para evaluarlos de acuerdo al orden
+de llegada, hace las correcciones necesarias y le responde al empleado Testeo
+correspondiente (el que hizo el reporte)
+
+- N empleados Testeo prueban producto para encontrar errores
+- 3 empleados Mantenimiento toman reportes en orden de llegada
+- 3 empleados Mantenimiento hacen las correcciones y responde
+
+Process Testeo[0..N-1]{
+    while(true){
+        R = generarReporte()
+        Admin!reporte(R,id)
+        Mantenimeitno[*]?respuesta //no le importa a testeo de quien es la respuesta
+    }
+}
+
+Process Admin {
+
+    do  Testeo[*]?reporte(R,idT) --> push (Fila, (R,idT))
+        not empty Fila --> Mantenimeinto[*]?pedido(idM)
+                            pop (Fila, R,idT)
+                            Mantenimeinto[idM]!reporte(R,idT)
+    
+    }
+
+}
+
+Process Mantenimiento[0..2]{
+
+    while(true){
+        Admin!pedido(id);
+        Admin?reporte(idT,R);
+        res = generarRespuesta();
+        Testeo[idT]!respuesta;
+    }
+
+}
