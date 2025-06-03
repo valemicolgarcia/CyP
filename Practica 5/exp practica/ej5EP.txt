@@ -1,0 +1,64 @@
+EJERCICIO 5
+
+Se debe modelar un buscador para contar la cantidad de veces que aparece un número dentro de un
+vector distribuido entre las N tareas contador. Además existe un administrador que decide el
+número que se desea buscar y se lo envía a los N contadores para que lo busquen en la parte del
+vector que poseen, y calcula la cantidad total.
+
+- buscador: procedure buscador
+- 1 admin: decide el num que se desea buscar
+- task admin, es uno solo
+- N contadores : buscan en la parte del vector que poseen y calcula el total
+- task type + array para los contadores
+
+Procedure Buscador is
+
+    //DECLARACION DE TASK Y TASK TYPE
+
+    Task Admin is
+        Entry Valor (num: OUT integer); //recibe el pedido de valor
+        Entry Valor (res: in integer); //recibe la cuenta parcial y la suma
+    End Admin;
+
+    Task Type Contador is
+        .
+    End Contador;
+
+    arrC: array(1..N) of Contador;
+
+    // DECLARACION DE TASK BODY
+
+    Task Body Admin is
+    Begin
+        for i in 1..2.N loop
+            select 
+                accept Valor(num: out integer) do //le decimos al contador cual es el nro elegido
+                    num:= numero
+                end Valor;
+            or
+                accept Resultado (res: in integer) do //el contador le dice cuanto conto y lo suma al total
+                    total: = total + res; 
+                end Resultado
+            end select
+        end loop
+
+    End admin
+
+    Task Body Contador is
+        vect: array(1..V) of integer := inicializarVcetor;
+        valor, cant: integer:=0
+    Begin
+        Admin.valor(valor); //le pude al admin el numero a contar
+        for i in 1..V loop
+            if vect(i) == valor then
+                cant:= cant+1;
+            end if
+        end loop
+        Admin.Resultado(cant);
+    End admin
+
+
+
+Begin
+    null;
+End Buscador;
