@@ -1,0 +1,70 @@
+EJERCICIO 1
+
+Se debe modelar la atención en un banco por medio de un único empleado. Los
+clientes llegan y son atendidos de acuerdo al orden de llegada.
+
+- Primero identifico las entidades que realizan tareas: n clientes y empleado
+- Empleado es un solo asi que sera un TASK
+- Clientes hay n entonces sera TASK TYPE
+
+Procedure Banco1 is
+    Task empleado is 
+        End empleado;
+    Task type cliente;
+    arrClientes: array(1..N) of Cliente;
+Begin
+    null
+End Banco1;
+
+--------------------------------------------------------
+- Despues voy a ver que hace cada task, uso un entry en el empleado que va a atender a los clientes
+- Los clientes son atendidos
+- El entry esta en la tarea que recibe el pedido, no en quien la hace. 
+- el que recibe hace el accept, y el que la hace hace el entry call
+- Los entry call a un entry se almacenan en la cola implicita del mismo de acuerdo al orden de llegada
+
+Procedure Banco is
+
+    Task empleado is 
+        Entry Pedido (D: IN texto, R: OUT texto)
+    End empleado;
+
+    Task type cliente;
+
+    arrClientes: array(1..N) of Cliente;
+
+    Task Body cliente is
+    Begin
+        empleado.pedido("datos",Resultado); //hace el entry call
+    End
+
+    Task Body empleado is
+    Begin
+        loop
+            accept Pedido (D: IN texto, R: OUT texto) do
+                R:= resolverPedido(D);
+            end Pedido;
+        end loop
+    End
+
+Begin
+    null
+End Banco1;
+
+-----------------------------------------------------------------
+
+EJERCICIO FINAL
+
+
+Procedure Banco is
+
+    Task empleado is 
+        
+    End empleado;
+
+    Task type cliente;
+
+
+
+
+End Banco
