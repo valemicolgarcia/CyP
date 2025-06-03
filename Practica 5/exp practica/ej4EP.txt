@@ -1,0 +1,63 @@
+EJERCICIO 4
+
+Se debe modelar la atención en un banco por medio de DOS empleados. Los clientes
+llegan y son atendidos de acuerdo al orden de llegada por cualquiera de los dos.
+
+- Atencion de banco: procedure banco
+- N clientes: task type y array
+- 2 empleados: task type y dos variables sueltas
+
+- El cliente no sabe quien es el empleado que lo atiende, por eso debe hacer el pedido al admin para que se lo mande al empleado que esta libre.
+- El empleado libre le va a pedir al administrador los datos del cleitne que esta esperando
+
+
+Procedure Banco4 is
+
+    //DECLARACION DE TASK Y TASK TYPE
+
+    Task Type Cliente is
+        entry Ident (Pos: IN integer); //para saber cual es su identifico
+        entry Respuesta (R: IN texto); //recibe la respuesta del pedido
+    End Cliente
+    arrClientes: array(0..N-1) OF cliente;
+
+    Task Type Empleado //no tiene ningun entry, no acepta nada, solo pide id de empleado y manda la respuetsa (no en el accept)
+    emp1,emp2: empleado;
+
+    Task Admin is
+        Entry Pedido (idC: IN integer, D: IN texto) //lo manda el cliente avisando que quiere ser atendido
+        Entry Siguiente (id: OUT integer, D: OUT texto) //el empleado pide id y datos del cliente
+    End Admin
+
+    //DECLARACION DE TASK BODY
+
+    Task Body Empleado is
+    Begin
+        loop
+            Admin.Siguiente(idCliente, datosCliente);
+            Res = resolverPedido(datosCliente);
+            arrClientes(idCliente).Respuesta(Res);
+        end loop
+    End empleado;
+
+    Task Body Cliente is 
+    Begin 
+        //NO SABEMOS CUAL ES EL IDC, PERO HAY QUE MADNARLO
+        Administrador.Pedido(idC, "datos");
+        Accept Respuesta(R: IN texto) do
+            resultado: R;
+        end Respuesta
+
+
+    End Cliente;
+
+    Task Body Admin is
+    Begin
+
+    End Admin;
+
+Begin 
+    for i in 1..N loop
+        arrClientes(i).Ident(i); //le mando a cada cliente cual es su identificador
+    end loop
+End Banco3;
