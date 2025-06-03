@@ -1,0 +1,67 @@
+EJERCICIO 3
+
+Se debe modelar la atención en un banco por medio de un único empleado. Los
+clientes llegan y esperan a ser atendidos; pueden ser Regulares o Prioritarios. El
+empleado los atiende de acuerdo al orden de llegada pero dando prioridad a los
+clientes Prioritarios
+
+- BANCO: procedure banco
+- 1 empleado: TASK
+- n clientes: TASK TYPE  + array
+- n clientes: regulares o Prioritarios, tengo que armar dos entrys distintos.
+- orden de llegada, pero con prioridad
+
+SOLUCION -----------------------------------------
+
+Procedure Banco3 is
+
+    //DECLARACION DE TASK Y TASK TYPE 
+    Task Empleado is
+        Entry Prioritario (D: IN textol R: OUT texto);
+        Entry Regular (D: IN texto, R: OUT texto)
+    End Empleado;
+
+    Task Type cliente;
+    arrClientes: array(1..N) of cliente;
+
+    //DECLARACION DE TASK BODY-----------------
+
+    Task body cliente is
+    Begin
+            if ("es cliente prioritario) then
+                Empleado.Prioritario("datos", Resultado);
+            else
+                Empleado.Regular("datos", Resultado);
+            end if;
+
+    End Cliente;
+
+    Task body Empleado is
+    Begin
+        loop
+
+            SELECT 
+                accept Prioritario(D: IN texto, R: OUT texto) do
+                    R:=resolverPedidoPrioritario(D);
+                end Prioritario;
+            OR when (Prioritario'count = 0) =>
+                    accept Regular (D: IN texto, R: OUT texto) do
+                        R:= resolverPedidoRegular(D);
+                    end Regular,
+
+            END SELECT;
+
+            
+        end loop
+    End Empleado;
+
+
+accept Pedido (D: IN texto, R: OUT texto) do
+                R:= resolverPedido(D);
+            end Pedido;
+
+
+
+Begin
+    null;
+End Banco3;
