@@ -1,0 +1,49 @@
+EJERCICIO 2 - PMS
+
+En una empresa de software hay un empleado Testeo que prueba un nuevo
+producto para encontrar errores, cuando encuentra uno generan un reporte para
+que otro empleado Mantenimiento corrija el error (no requiere una respuesta
+para seguir trabajando) y continua trabajando. El empleado Mantenimiento
+toma los reportes para evaluarlos y hacer las correcciones necesarias.
+
+NO HAY Respuesta
+
+
+- 1emp Testeo: encuentra error, genera reporte
+- 1emp Mantenimiento: toma reportes, hace correcciones
+
+Process Testeo{
+    texto R;
+    texto Res;
+
+    while(true){
+        R=generarReporte();
+        Admin!reporte(R);  //le manda el reporte primero a admin
+        // termina de enviar el reporte y manda otro, esto hace que haya que agregar admin en el medio
+    }
+}
+
+Process Admin{
+    cola Buffer;
+    texto R;
+    //do evalua ctemente todas las guardas
+    
+    do Testeo?Reporte(R) --> push(Buffer, R);
+        not empty (Buffer); Mantenimiento!reporte(pop(buffer));
+
+}
+
+
+Process Mantenimiento{
+    texto R;
+    texto Res;
+    while (true){
+
+        Admin!pedido() //le pide al admin que le madne el pedido ya que termino de resolver el anterior
+        Admin?reporte(R); //
+        Res = generarRespuesta(R);
+        
+    }
+
+}
+
